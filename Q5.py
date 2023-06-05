@@ -2,6 +2,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 import open3d as o3d
 import pyvista as pv
+import plotly.graph_objects as go
 
 
 def load_3d_point_cloud():
@@ -127,6 +128,53 @@ def plot_3d_point_cloud_with_colors(points, normalized_laplacian, plot=True):
 
     return eig
 
+def plot_3d_point_cloud_with_colors_plotly(points, normalized_laplacian, plot=True):
+    eig, U = np.linalg.eig(normalized_laplacian)
+    eig = np.real(eig)
+    idx = eig.argsort()
+
+    eig = eig[idx]
+    U = np.real(U[:, idx])
+
+    if plot:
+        # first eigenvector colorization
+        fig = go.Figure(data=go.Scatter3d(
+            x=points[:, 0], y=points[:, 1], z=points[:, 2],
+            mode='markers',
+            marker=dict(color=U[:, 0], size=3, colorscale='Viridis', opacity=0.8)
+        ))
+        fig.update_layout(scene=dict(xaxis_title='X', yaxis_title='Y', zaxis_title='Z'))
+        fig.show()
+
+        # second eigenvector colorization
+        fig = go.Figure(data=go.Scatter3d(
+            x=points[:, 0], y=points[:, 1], z=points[:, 2],
+            mode='markers',
+            marker=dict(color=U[:, 1], size=3, colorscale='Viridis', opacity=0.8)
+        ))
+        fig.update_layout(scene=dict(xaxis_title='X', yaxis_title='Y', zaxis_title='Z'))
+        fig.show()
+
+        # sixth eigenvector colorization
+        fig = go.Figure(data=go.Scatter3d(
+            x=points[:, 0], y=points[:, 1], z=points[:, 2],
+            mode='markers',
+            marker=dict(color=U[:, 5], size=3, colorscale='Viridis', opacity=0.8)
+        ))
+        fig.update_layout(scene=dict(xaxis_title='X', yaxis_title='Y', zaxis_title='Z'))
+        fig.show()
+
+        # tenth eigenvector colorization
+        fig = go.Figure(data=go.Scatter3d(
+            x=points[:, 0], y=points[:, 1], z=points[:, 2],
+            mode='markers',
+            marker=dict(color=U[:, 9], size=3, colorscale='Viridis', opacity=0.8)
+        ))
+        fig.update_layout(scene=dict(xaxis_title='X', yaxis_title='Y', zaxis_title='Z'))
+        fig.show()
+
+    return eig
+
 def low_pass_filter(points, lambda_max, tau=1e-4):
     # apply h(x)=exp(-tau*x/lambda_max)
     h = lambda x: np.exp(-tau * x / lambda_max)
@@ -148,7 +196,7 @@ plot_via_pyvista(noisy_points)
 W = construct_affinity_matrix(noisy_points, r=np.mean(avg))
 L_norm = calculate_normalized_laplacian(W)
 # d
-eig = plot_3d_point_cloud_with_colors(noisy_points, L_norm,plot=True)
+eig = plot_3d_point_cloud_with_colors_plotly(noisy_points, L_norm,plot=True)
 # e
 denoised_points = low_pass_filter(noisy_points, eig[-1])
 plot_via_pyvista(denoised_points)

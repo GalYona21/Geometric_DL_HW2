@@ -24,9 +24,11 @@ def cartesian_product_graph_laplacian(L1, L2):
         for j in range(n2):
             for k in range(n1):
                 for l in range(n2):
-                    if L1[i, k] == -1 or L2[j, l] == -1:
+                    if (L1[i, k] == -1 and j==l) or (L2[j, l] == -1 and i==k):
                         adj[i * n2 + j, k * n2 + l] = 1
                         adj[k * n2 + l, i * n2 + j] = 1
+
+
     D = np.diag(np.sum(adj, axis=1))
     L = D - adj
     return L
