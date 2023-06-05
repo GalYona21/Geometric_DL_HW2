@@ -127,7 +127,7 @@ def plot_3d_point_cloud_with_colors(points, normalized_laplacian, plot=True):
 
     return eig
 
-def low_pass_filter(points, lambda_max, tau=0.1):
+def low_pass_filter(points, lambda_max, tau=1e-4):
     # apply h(x)=exp(-tau*x/lambda_max)
     h = lambda x: np.exp(-tau * x / lambda_max)
 
@@ -140,16 +140,17 @@ points, avg = load_3d_point_cloud()
 # a
 plot_via_pyvista(points)
 # b
-noisy_points = add_noise(points, s=np.mean(avg))
+# noisy_points = add_noise(points, s=np.mean(avg))
+noisy_points = add_noise(points, s=15)
 plot_via_pyvista(noisy_points)
 # plot_via_matplotlib(noisy_points)
 # c
 W = construct_affinity_matrix(noisy_points, r=np.mean(avg))
 L_norm = calculate_normalized_laplacian(W)
 # d
-eig = plot_3d_point_cloud_with_colors(noisy_points, L_norm,plot=False)
+eig = plot_3d_point_cloud_with_colors(noisy_points, L_norm,plot=True)
 # e
-denoised_points = low_pass_filter(noisy_points, eig[0])
+denoised_points = low_pass_filter(noisy_points, eig[-1])
 plot_via_pyvista(denoised_points)
 # plot_via_open3d(denoised_points)
 
