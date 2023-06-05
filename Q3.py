@@ -4,7 +4,6 @@ import matplotlib.pyplot as plt
 import cv2
 
 
-
 class cyclic_group_order_4():
 
     def __init__(self):
@@ -87,4 +86,4 @@ def Q_3_a():
 
 
 
-Q_3_a()
+# Q_3_a()
