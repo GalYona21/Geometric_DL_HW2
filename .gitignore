@@ -1,3 +1,7 @@
 data/
+Pipfile
+.gdl/
+.ipynb_checkpoints/
+lightning_logs/
 tb_logs/
 __pycache__
