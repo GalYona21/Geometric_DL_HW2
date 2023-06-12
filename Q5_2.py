@@ -107,9 +107,6 @@ def low_pass_filter(points, eig, U, tau=0.07):
     h = np.exp(-tau * eig / lambda_max)
     H = np.diag(h)
     print(H)
-    H = np.identity(len(points))
-    H[-1, -1] = 0
-    print(H)
 
     denoised_points = U.dot(H).dot(U.T).dot(points)
     return denoised_points
