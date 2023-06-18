@@ -184,6 +184,8 @@ def low_pass_filter(points, lambda_max, tau=1e-4):
 
 
 
+
+
 points, avg = load_3d_point_cloud()
 # a
 plot_via_pyvista(points)

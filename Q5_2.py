@@ -3,6 +3,9 @@ import numpy as np
 import pyvista as pv
 import matplotlib.pyplot as plt
 
+def calc_L2_dist(points, noisy_points):
+    return np.linalg.norm(points - noisy_points)
+
 def get_points(imagenet40_path):
     mesh = o3d.io.read_triangle_mesh(imagenet40_path)
     return np.asarray(mesh.vertices)
@@ -16,15 +19,20 @@ def add_noise(points, s=0.5):
     return points + noise
 
 # Construct a sparse affinity matrix by a Gaussian kernel with the Euclidean distance in a
-def construct_affinity_matrix(points, r=0.5, sigma=0.0066184773552824165):
+def construct_affinity_matrix(points, r=0.1, sigma=0.1):
     # Compute the pairwise Euclidean distances
     distances = np.sqrt(((points[:, None] - points) ** 2).sum(axis=2))
+    mid = np.median(distances.flatten())
+    r = mid
 
     # Initialize affinity matrix with zeros
     affinity_matrix = np.zeros_like(distances)
 
     # Create the affinity matrix using the distance threshold
     affinity_matrix[distances <= r] = np.exp(-distances[distances <= r] ** 2 / (2 * sigma ** 2))
+    #plt.imshow(affinity_matrix)
+   # plt.colorbar()
+   # plt.show()
 
     return affinity_matrix
 
@@ -51,8 +59,13 @@ def plot_3d_point_cloud_with_colors(points, normalized_laplacian, plot=True):
     eig = np.real(eig)
     U = np.real(U)
 
+    plt.plot(eig)
+    plt.title('Eigenvalues')
+    plt.show()
+
     eig = np.round(eig, 5)
     U = np.round(U, 5)
+    print(eig)
 
     np.save('eig.npy', eig)
     np.save('U.npy', U)
@@ -100,7 +113,7 @@ def plot_3d_point_cloud_with_colors(points, normalized_laplacian, plot=True):
 
     return eig, U
 
-def low_pass_filter(points, eig, U, tau=0.07):
+def low_pass_filter(points, eig, U, tau=0.1):
     lambda_max = eig[-1]
 
     # apply h(x)=exp(-tau*x/lambda_max)
@@ -111,30 +124,17 @@ def low_pass_filter(points, eig, U, tau=0.07):
     denoised_points = U.dot(H).dot(U.T).dot(points)
     return denoised_points
 
-points = get_points("bowl_0071.off")
+points = get_points("person_0022.off")
 
-mean_x = np.mean(points[:, 0])  # Mean along the x-axis
-mean_y = np.mean(points[:, 1])  # Mean along the y-axis
-mean_z = np.mean(points[:, 2])  # Mean along the z-axis
 
-var_x = np.var(points[:, 0])  # Variance along the x-axis
-var_y = np.var(points[:, 1])  # Variance along the y-axis
-var_z = np.var(points[:, 2])  # Variance along the z-axis
-std_x = np.sqrt(var_x)
-std_y = np.sqrt(var_y)
-std_z = np.sqrt(var_z)
-
-k = 0.5 / max(std_x, std_y, std_z)
-radius = k * max(std_x, std_y, std_z)
-print("radius: ", radius)
-sigma = (var_x + var_y + var_z) / 3.0
-print("sigma: ", sigma)
 
 plot_via_pyvista(points)
 noisy_points = add_noise(points)
+print("L2_norm before: ", calc_L2_dist(points, noisy_points))
 plot_via_pyvista(noisy_points)
 affinity_matrix = construct_affinity_matrix(noisy_points)
 L_norm = calculate_normalized_laplacian(affinity_matrix)
 eig, U = plot_3d_point_cloud_with_colors(noisy_points, L_norm,plot=True)
 denoised_points = low_pass_filter(noisy_points, eig, U)
 plot_via_pyvista(denoised_points)
+print("L2_norm after: ", calc_L2_dist(points, denoised_points))
